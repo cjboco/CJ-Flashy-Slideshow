@@ -57,6 +57,10 @@
  *
  * Version History
  * --------------------------------------------------------------------------------
+ * 2.1 - 12-20-2011
+ *		Added the ability to use links on your images.
+ *			 (This version now uses and required jQuery 1.7+)
+ *		Fixed the padding, margin, border offset problem.
  * 2.0 - 12-19-2011
  *		Re-write to new plug-in structure.
  *		updated imagesLoaded fn.
@@ -95,12 +99,12 @@
 				return typeof f == 'undefined' ? Math.round(v) : v.toFixed(f);
 			},
 
-			_getNextImage = function (n) {
+			_getNextSlide = function (n) {
 				var sys = $obj.data('system');
 				if (parseInt(n, 10) + 1 < sys.imgs.length) {
-					return sys.imgs[n + 1].src;
+					return sys.imgs[n + 1];
 				} else {
-					return sys.imgs[0].src;
+					return sys.imgs[0];
 				}
 			};
 
@@ -113,7 +117,8 @@
 		// reset our transitional blocks
 		function resetBlocks() {
 			var sys = $obj.data('system'),
-				next_img = _getNextImage(sys.current_img);
+				next_slide = _getNextSlide(sys.current_img),
+				slide_src;
 
 			// loop through and find each transition block
 			$obj.find('#cjFlashyTransitionTop .cjFlashyTransitionBlock').each(function () {
@@ -142,12 +147,19 @@
 					}
 				}
 
+				// determine the image source
+				if (next_slide.nodeName === 'A') {
+					slide_src = $(next_slide).find('img').get(0).src;
+				} else {
+					slide_src = next_slide.src;
+				}
+
 				$this.css({
 					top: data.start_top + 'px',
 					left: data.start_left + 'px',
 					width: options.minBlockSize + 'px',
 					height: options.minBlockSize + 'px',
-					'background-image': 'url(' + next_img + ')',
+					'background-image': 'url(' + slide_src + ')',
 					opacity: data.opacity
 				});
 
@@ -158,14 +170,30 @@
 		// handle image swaps and delay once transitional blocks are done.
 		function handleBlocksDone(clb) {
 			var sys = $obj.data('system'),
-				next_img;
+				next_slide, slide_src;
 			sys.current_blocks++;
 			if (sys.current_blocks === sys.total_blocks) {
-				next_img = _getNextImage(sys.current_img);
+
+				// get the next slide object
+				next_slide = _getNextSlide(sys.current_img);
+
+				// check for a link and determine the image source
+				if (next_slide.nodeName === 'A') {
+					$obj.off('click').on('click', function() {
+						document.location.href = $(next_slide).attr('href');
+						return false;
+					}).css('cursor', 'pointer').attr('title', $(next_slide).attr('href'));
+					slide_src = $(next_slide).find('img').get(0).src;
+				} else {
+					slide_src = next_slide.src;
+				}
+
+				// set slide src
 				$obj.find('#cjFlashyTransitionBottom').css({
-					'background-image': 'url(' + next_img + ')',
+					'background-image': 'url(' + slide_src + ')',
 					'background-attachment': 'scroll'
 				});
+
 				sys.current_blocks = 0;
 				sys.current_img++;
 				if (sys.current_img > sys.imgs.length - 1) {
@@ -211,8 +239,11 @@
 		// corrects the block's image offset to the page
 		function correctOffset() {
 			$obj.find('#cjFlashyTransitionTop .cjFlashyTransitionBlock').each(function () {
+				var off = $obj.offset(),
+					padMargBorFixW = parseInt(($obj.outerWidth() - $obj.width()) / 2, 10),
+					padMargBorFixH = parseInt(($obj.outerHeight() - $obj.height()) / 2, 10);
 				$(this).css({
-					'background-position': ($obj.offset().left - $(window).scrollLeft()) + 'px ' + ($obj.offset().top - $(window).scrollTop()) + 'px'
+					'background-position': (off.left + padMargBorFixW - $(window).scrollLeft()) + 'px ' + (off.top + padMargBorFixH - $(window).scrollTop()) + 'px'
 				});
 			});
 		}
@@ -220,8 +251,9 @@
 		// create our transitional blocks
 		function createBlocks() {
 			var sys = $obj.data('system'),
-				next_img = _getNextImage(sys.current_img),
-				$elem, $block, data, x, y;
+				$elem, $block,
+				next_slide = _getNextSlide(sys.current_img),
+				slide_src, data, x, y;
 			for (y = 0; y < options.yBlocks; y++) {
 				for (x = 0; x < options.xBlocks; x++) {
 
@@ -260,6 +292,13 @@
 					// set opacity
 					data.opacity = options.translucent ? _randomRange(0.1, 0.5, 2) : 1;
 
+					// determine the image source
+					if (next_slide.nodeName === 'A') {
+						slide_src = $(next_slide).find('img').get(0).src;
+					} else {
+						slide_src = next_slide.src;
+					}
+
 					$block.css({
 						position: 'absolute',
 						top: data.start_top + 'px',
@@ -269,7 +308,7 @@
 						height: options.minBlockSize + 'px',
 						margin: '0px',
 						padding: '0px',
-						'background-image': 'url(' + next_img + ')',
+						'background-image': 'url(' + slide_src + ')',
 						'background-repeat': 'no-repeat',
 						'background-position': $obj.offset().left + 'px ' + $obj.offset().top + 'px',
 						'background-attachment': 'fixed',
@@ -279,11 +318,11 @@
 					/* set up additional stylings based on style */
 					if (options.style === 'rounded') {
 						$block.css({
-							'-moz-border-radius': sys.h + 'px',
-							'-webkit-border-radius': sys.h + 'px',
-							'-o-border-radius': sys.h + 'px',
-							'-ms-border-radius': sys.h + 'px',
-							'border-radius': sys.h + 'px'
+							'-moz-border-radius': (sys.h > sys.w ? sys.h : sys.w) + 'px',
+							'-webkit-border-radius': (sys.h > sys.w ? sys.h : sys.w) + 'px',
+							'-o-border-radius': (sys.h > sys.w ? sys.h : sys.w) + 'px',
+							'-ms-border-radius': (sys.h > sys.w ? sys.h : sys.w) + 'px',
+							'border-radius': (sys.h > sys.w ? sys.h : sys.w) + 'px'
 						});
 					}
 
@@ -313,7 +352,8 @@
 
 		function init() {
 
-			var sys = $obj.data('system');
+			var sys = $obj.data('system'),
+				slide_src;
 
 			// determine the preset
 			switch (options.preset) {
@@ -435,6 +475,17 @@
 			sys.current_img = 0;
 			sys.current_blocks = 0;
 
+			// check for a link
+			if (sys.imgs[sys.current_img].nodeName === 'A') {
+				$obj.off('click').on('click', function() {
+					document.location.href = $(sys.imgs[sys.current_img]).attr('href');
+					return false;
+				}).css('cursor', 'pointer').attr('title', $(sys.imgs[sys.current_img]).attr('href'));
+				slide_src = $(sys.imgs[sys.current_img]).find('img').get(0).src;
+			} else {
+				slide_src = sys.imgs[sys.current_img].src;
+			}
+
 			$obj.append('<div id="cjFlashyTransitionBottom">');
 			$obj.find('#cjFlashyTransitionBottom').css({
 				position: 'absolute',
@@ -445,7 +496,7 @@
 				height: sys.h + 'px',
 				margin: '0px',
 				padding: '0px',
-				'background-image': 'url("' + sys.imgs[sys.current_img].src + '")',
+				'background-image': 'url("' + slide_src + '")',
 				'background-repeat': 'no-repeat',
 				'background-position': '50% 50%',
 				'background-attachment': 'scroll',
@@ -477,7 +528,7 @@
 			$obj.data('system', {
 				// system parameters
 				version: '2.0.0',
-				imgs: $obj.find('img'),
+				imgs: [],
 				w: parseInt($obj.width(), 10),
 				h: parseInt($obj.height(), 10),
 				block_w: 0,
@@ -490,6 +541,16 @@
 				directions: ['top', 'left', 'bottom', 'right'],
 				total_blocks: 0,
 				loaded: 0
+			});
+
+			// grab images and check for links
+			$obj.find('img').each(function(a, b) {
+				var $this = $(b);
+				if ($this.parent('a').length > 0) {
+					$obj.data('system').imgs.push($this.parent('a').get(0));
+				} else {
+					$obj.data('system').imgs.push($this.get(0));
+				}
 			});
 
 			if (!options.destElem) {

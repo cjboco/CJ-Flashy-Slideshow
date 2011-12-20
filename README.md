@@ -15,7 +15,7 @@ CJ Flashy Slide Show is a JQuery plugin that allows you to create a photo slide 
 This version is identical to CJ Flashy Slide Show 1.1.2, accept I've now added a variety of pre-defined presets. You still can pass the old variables to the code if you like, but I've noticed that I may have made things a little too complicated for a few users. This is my attempt to simplify things. If you would like to make your own presets or play around the various options, take a look at that version to see what all the options are.
 
 ### Requirements ###
-CJ Flashy Slide Show requires JQuery 1.4.2 or greater. I have tested this with version 1.3.2, but not anything older than that.
+CJ Flashy Slide Show requires JQuery 1.7.0 or greater. This version is using the new .off() and .on() event delegation methods, which requires at least version 1.7 of jQuery. In theory, you could change these methods to .bind() and the plug-in should work in older versions.
 
 ### Implementing ###
 
