@@ -22,7 +22,7 @@ CJ Flashy Slide Show requires JQuery 1.7.0 or greater. This version is using the
 #### Header Includes ####
 Getting CJ Flashy Slide Show to work is really quite simple. The first thing you are going to need to do is include the jquery.cjFlashySlideshow-1.1.2.js file after your call to include JQuery. This is done in the header area of your web page. Typically you will do something like this:
 
-	<script src="jquery-1.4.2.min.js" type="text/javascript"></script>
+	<script src="jquery.min.js" type="text/javascript"></script>
 	<script src="jquery-flashy-slideshow-1.1.2.js" type="text/javascript"></script>
 
 Next, you will need to have a block container that contains a single or group of images. I've added line breaks <br> in my example, but it is not neccessary. I do this so the page looks somewhat presentable for any user who may not have a JavaScript or CSS capable web browser.
