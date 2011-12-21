@@ -57,6 +57,9 @@
  *
  * Version History
  * --------------------------------------------------------------------------------
+ * 2.1.1 - 12-20-2011
+ *		Minor changes to to make sure you can use ustom options (from version 1.1.2).
+ *		Added more directions (topleft, topright, bottomleft, bottomright)
  * 2.1 - 12-20-2011
  *		Added the ability to use links on your images.
  *			 (This version now uses and required jQuery 1.7+)
@@ -129,22 +132,55 @@
 				// randomize the direction (if set)
 				if (options.direction === 'random') {
 					options.current_direction = sys.directions[parseInt(_randomRange(0, sys.directions.length - 1), 10)];
+
+					// calculate positions
 					if (options.current_direction === 'top') {
+
 						data.start_top = options.minBlockSize * -1;
 						data.start_left = parseInt((sys.block_w * data.x) + (sys.block_w / 2) - (options.minBlockSize / 2), 10);
+
+					} else if (options.current_direction === 'topleft') {
+
+						data.start_top = options.minBlockSize * -1;
+						data.start_left = options.minBlockSize * -1;
+
+					} else if (options.current_direction === 'topright') {
+
+						data.start_top = options.minBlockSize * -1;
+						data.start_left = sys.w + options.minBlockSize;
+
 					} else if (options.current_direction === 'left') {
+
 						data.start_top = parseInt((sys.block_h * data.y) + (sys.block_h / 2) - (options.minBlockSize / 2), 10);
 						data.start_left = options.minBlockSize * -1;
+
 					} else if (options.current_direction === 'bottom') {
+
 						data.start_top = sys.h + options.minBlockSize;
 						data.start_left = parseInt((sys.block_w * data.x) + (sys.block_w / 2) - (options.minBlockSize / 2), 10);
+
+					} else if (options.current_direction === 'bottomleft') {
+
+						data.start_top = sys.h + options.minBlockSize;
+						data.start_left = options.minBlockSize * -1;
+
+					} else if (options.current_direction === 'bottomright') {
+
+						data.start_top = sys.h + options.minBlockSize;
+						data.start_left = sys.w + options.minBlockSize;
+
 					} else if (options.current_direction === 'right') {
+
 						data.start_top = parseInt((sys.block_h * data.y) + (sys.block_h / 2) - (options.minBlockSize / 2), 10);
 						data.start_left = sys.w + options.minBlockSize;
+
 					} else {
+
 						data.start_top = parseInt((sys.block_h * data.y) + (sys.block_h / 2) - (options.minBlockSize / 2), 10);
 						data.start_left = parseInt((sys.block_w * data.x) + (sys.block_w / 2) - (options.minBlockSize / 2), 10);
+
 					}
+
 				}
 
 				// determine the image source
@@ -272,21 +308,53 @@
 					if (options.direction === 'random') {
 						options.current_direction = sys.directions[_randomRange(0, sys.directions.length - 1)];
 					}
+
+					// calculate initial position
 					if (options.current_direction === 'top') {
+
 						data.start_top = options.minBlockSize * -1;
 						data.start_left = parseInt((sys.block_w * x) + (sys.block_w / 2) - (options.minBlockSize / 2), 10);
+
+					} else if (options.current_direction === 'topleft') {
+
+						data.start_top = options.minBlockSize * -1;
+						data.start_left = options.minBlockSize * -1;
+
+					} else if (options.current_direction === 'topright') {
+
+						data.start_top = options.minBlockSize * -1;
+						data.start_left = sys.w + options.minBlockSize;
+
 					} else if (options.current_direction === 'left') {
+
 						data.start_top = parseInt((sys.block_h * y) + (sys.block_h / 2) - (options.minBlockSize / 2), 10);
 						data.start_left = options.minBlockSize * -1;
+
 					} else if (options.current_direction === 'bottom') {
+
 						data.start_top = sys.h + options.minBlockSize;
 						data.start_left = parseInt((sys.block_w * x) + (sys.block_w / 2) - (options.minBlockSize / 2), 10);
+
+					} else if (options.current_direction === 'bottomleft') {
+
+						data.start_top = sys.h + options.minBlockSize;
+						data.start_left = options.minBlockSize * -1;
+
+					} else if (options.current_direction === 'bottomright') {
+
+						data.start_top = sys.h + options.minBlockSize;
+						data.start_left = sys.w + options.minBlockSize;
+
 					} else if (options.current_direction === 'right') {
+
 						data.start_top = parseInt((sys.block_h * y) + (sys.block_h / 2) - (options.minBlockSize / 2), 10);
 						data.start_left = sys.w + options.minBlockSize;
+
 					} else {
+
 						data.start_top = parseInt((sys.block_h * y) + (sys.block_h / 2) - (options.minBlockSize / 2), 10);
 						data.start_left = parseInt((sys.block_w * x) + (sys.block_w / 2) - (options.minBlockSize / 2), 10);
+
 					}
 
 					// set opacity
@@ -355,87 +423,89 @@
 			var sys = $obj.data('system'),
 				slide_src;
 
-			// determine the preset
-			switch (options.preset) {
-			case 'cubism':
-				options.xBlocks = Math.round(sys.w / 100);
-				options.yBlocks = Math.round(sys.h / 100);
-				options.minBlockSize = Math.round(sys.w / 100) * 25;
-				options.direction = 'random';
-				options.translucent = true;
-				options.sloppy = true;
-				options.delay = 3000;
-				break;
-			case 'rain':
-				options.xBlocks = Math.round(sys.w / 75);
-				options.yBlocks = Math.round(sys.h / 75);
-				options.minBlockSize = 2;
-				options.style = 'rounded';
-				options.direction = 'top';
-				options.translucent = false;
-				options.sloppy = true;
-				options.delay = 1250;
-				break;
-			case 'blinds':
-				options.xBlocks = 1;
-				options.yBlocks = Math.round(sys.h / 15);
-				options.minBlockSize = 0;
-				options.style = 'normal';
-				options.direction = 'top';
-				options.translucent = false;
-				options.sloppy = false;
-				options.delay = 3000;
-				break;
-			case 'blinds2':
-				options.xBlocks = Math.round(sys.w / 15);
-				options.yBlocks = 1;
-				options.minBlockSize = 0;
-				options.style = 'normal';
-				options.direction = 'top';
-				options.translucent = false;
-				options.sloppy = false;
-				options.delay = 3000;
-				break;
-			case 'transport':
-				options.xBlocks = 1;
-				options.yBlocks = Math.round(sys.h / 10);
-				options.minBlockSize = 0;
-				options.style = 'normal';
-				options.direction = 'top';
-				options.translucent = true;
-				options.sloppy = true;
-				options.delay = 1250;
-				break;
-			case 'transport2':
-				options.xBlocks = Math.round(sys.w / 10);
-				options.yBlocks = 1;
-				options.minBlockSize = 0;
-				options.style = 'normal';
-				options.direction = 'top';
-				options.translucent = true;
-				options.sloppy = true;
-				options.delay = 1250;
-				break;
-			case 'bricks':
-				options.xBlocks = Math.round(sys.w / 100);
-				options.yBlocks = Math.round(sys.h / 100);
-				options.minBlockSize = 3;
-				options.style = 'normal';
-				options.direction = 'left';
-				options.translucent = false;
-				options.sloppy = false;
-				options.delay = 3000;
-				break;
-			default:
-				options.xBlocks = Math.round(sys.w / 100);
-				options.yBlocks = Math.round(sys.h / 100);
-				options.minBlockSize = 3;
-				options.style = 'normal';
-				options.direction = 'top';
-				options.translucent = false;
-				options.sloppy = false;
-				options.delay = 3000;
-				break;
+			// determine if we have a preset. If so, set some options (overides user options).
+			if (options.preset) {
+				switch (options.preset) {
+				case 'cubism':
+					options.xBlocks = Math.round(sys.w / 100);
+					options.yBlocks = Math.round(sys.h / 100);
+					options.minBlockSize = Math.round(sys.w / 100) * 25;
+					options.direction = 'random';
+					options.translucent = true;
+					options.sloppy = true;
+					options.delay = 3000;
+					break;
+				case 'rain':
+					options.xBlocks = Math.round(sys.w / 75);
+					options.yBlocks = Math.round(sys.h / 75);
+					options.minBlockSize = 2;
+					options.style = 'rounded';
+					options.direction = 'top';
+					options.translucent = false;
+					options.sloppy = true;
+					options.delay = 1250;
+					break;
+				case 'blinds':
+					options.xBlocks = 1;
+					options.yBlocks = Math.round(sys.h / 15);
+					options.minBlockSize = 0;
+					options.style = 'normal';
+					options.direction = 'top';
+					options.translucent = false;
+					options.sloppy = false;
+					options.delay = 3000;
+					break;
+				case 'blinds2':
+					options.xBlocks = Math.round(sys.w / 15);
+					options.yBlocks = 1;
+					options.minBlockSize = 0;
+					options.style = 'normal';
+					options.direction = 'top';
+					options.translucent = false;
+					options.sloppy = false;
+					options.delay = 3000;
+					break;
+				case 'transport':
+					options.xBlocks = 1;
+					options.yBlocks = Math.round(sys.h / 10);
+					options.minBlockSize = 0;
+					options.style = 'normal';
+					options.direction = 'top';
+					options.translucent = true;
+					options.sloppy = true;
+					options.delay = 1250;
+					break;
+				case 'transport2':
+					options.xBlocks = Math.round(sys.w / 10);
+					options.yBlocks = 1;
+					options.minBlockSize = 0;
+					options.style = 'normal';
+					options.direction = 'top';
+					options.translucent = true;
+					options.sloppy = true;
+					options.delay = 1250;
+					break;
+				case 'bricks':
+					options.xBlocks = Math.round(sys.w / 100);
+					options.yBlocks = Math.round(sys.h / 100);
+					options.minBlockSize = 3;
+					options.style = 'normal';
+					options.direction = 'left';
+					options.translucent = false;
+					options.sloppy = false;
+					options.delay = 3000;
+					break;
+				default:
+					options.xBlocks = Math.round(sys.w / 100);
+					options.yBlocks = Math.round(sys.h / 100);
+					options.minBlockSize = 3;
+					options.style = 'normal';
+					options.direction = 'top';
+					options.translucent = false;
+					options.sloppy = false;
+					options.delay = 3000;
+					break;
+				}
 			}
 
 			// make sure our main element has positioning set
@@ -527,7 +597,7 @@
 			options = $.extend(options, settings);
 			$obj.data('system', {
 				// system parameters
-				version: '2.0.0',
+				version: '2.1.1',
 				imgs: [],
 				w: parseInt($obj.width(), 10),
 				h: parseInt($obj.height(), 10),
@@ -538,7 +608,7 @@
 				current_img: 0,
 				current_blocks: 0,
 				current_direction: 'left',
-				directions: ['top', 'left', 'bottom', 'right'],
+				directions: ['top', 'topleft', 'topright', 'left', 'bottom', 'bottomleft', 'bottomright', 'right'],
 				total_blocks: 0,
 				loaded: 0
 			});
