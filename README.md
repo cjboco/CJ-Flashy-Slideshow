@@ -20,7 +20,7 @@ CJ Flashy Slide Show requires JQuery 1.7.0 or greater. This version is using the
 ### Implementing ###
 
 #### Header Includes ####
-Getting CJ Flashy Slide Show to work is really quite simple. The first thing you are going to need to do is include the jquery.cjFlashySlideshow-1.1.2.js file after your call to include JQuery. This is done in the header area of your web page. Typically you will do something like this:
+Getting CJ Flashy Slide Show to work is really quite simple. The first thing you are going to need to do is include the jquery.cj-flashy-slideshow.js file after your call to include JQuery. This is done in the header area of your web page. Typically you will do something like this:
 
 	<script src="jquery.min.js" type="text/javascript"></script>
 	<script src="jquery.cj-flashy-slideshow.js" type="text/javascript"></script>
