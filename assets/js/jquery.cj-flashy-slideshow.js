@@ -408,6 +408,9 @@
 				correctOffset();
 			});
 
+			// initial correction
+			correctOffset();
+
 			// start the animation
 			sys.timer = setTimeout(function () {
 				animateBlocks();
