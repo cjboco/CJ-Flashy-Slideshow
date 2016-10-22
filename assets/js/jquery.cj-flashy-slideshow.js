@@ -5,44 +5,118 @@
  *
  * MIT License. by Paul Irish et al.
  */
-(function ($) {
-	"use strict";
-	// $('#my-container').imagesLoaded(myFunction)
-	// or
-	// $('img').imagesLoaded(myFunction)
-	// execute a callback when all images have loaded.
-	// needed because .load() doesn't work on cached images
-	// callback function gets image collection as argument
-	//  `this` is the container
-	$.fn.imagesLoaded = function (callback) {
-		var $this = this,
-			$images = $this.find('img').add($this.filter('img')),
-			len = $images.length,
-			blank = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
-		function triggerCallback() {
-			callback.call($this, $images);
-		}
-		function imgLoaded(event) {
-			if (--len <= 0 && event.target.src !== blank) {
-				setTimeout(triggerCallback);
-				$images.unbind('load error', imgLoaded);
-			}
-		}
-		if (!len) {
-			triggerCallback();
-		}
-		$images.bind('load error', imgLoaded).each(function () {
-			// cached images don't fire load sometimes, so we reset src.
-			if (this.complete || this.complete === undefined) {
-				var src = this.src;
-				// webkit hack from http://groups.google.com/group/jquery-dev/browse_thread/thread/eee6ab7b2da50e1f
-				// data uri bypasses webkit log warning (thx doug jones)
-				this.src = blank;
-				this.src = src;
+(function($) {
+'use strict';
+
+$.fn.imagesLoaded = function( callback ) {
+	var $this = this,
+		deferred = $.isFunction($.Deferred) ? $.Deferred() : 0,
+		hasNotify = $.isFunction(deferred.notify),
+		$images = $this.find('img').add( $this.filter('img') ),
+		loaded = [],
+		proper = [],
+		broken = [],
+		BLANK = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
+
+	// Register deferred callbacks
+	if ($.isPlainObject(callback)) {
+		$.each(callback, function (key, value) {
+			if (key === 'callback') {
+				callback = value;
+			} else if (deferred) {
+				deferred[key](value);
 			}
 		});
-		return $this;
-	};
+	}
+
+	function doneLoading() {
+		var $proper = $(proper),
+			$broken = $(broken);
+
+		if ( deferred ) {
+			if ( broken.length ) {
+				deferred.reject( $images, $proper, $broken );
+			} else {
+				deferred.resolve( $images );
+			}
+		}
+
+		if ( $.isFunction( callback ) ) {
+			callback.call( $this, $images, $proper, $broken );
+		}
+	}
+
+	function imgLoadedHandler( event ) {
+		imgLoaded( event.target, event.type === 'error' );
+	}
+
+	function imgLoaded( img, isBroken ) {
+		// don't proceed if BLANK image, or image is already loaded
+		if ( img.src === BLANK || $.inArray( img, loaded ) !== -1 ) {
+			return;
+		}
+
+		// store element in loaded images array
+		loaded.push( img );
+
+		// keep track of broken and properly loaded images
+		if ( isBroken ) {
+			broken.push( img );
+		} else {
+			proper.push( img );
+		}
+
+		// cache image and its state for future calls
+		$.data( img, 'imagesLoaded', { isBroken: isBroken, src: img.src } );
+
+		// trigger deferred progress method if present
+		if ( hasNotify ) {
+			deferred.notifyWith( $(img), [ isBroken, $images, $(proper), $(broken) ] );
+		}
+
+		// call doneLoading and clean listeners if all images are loaded
+		if ( $images.length === loaded.length ) {
+			setTimeout( doneLoading );
+			$images.unbind( '.imagesLoaded', imgLoadedHandler );
+		}
+	}
+
+	// if no images, trigger immediately
+	if ( !$images.length ) {
+		doneLoading();
+	} else {
+		$images.bind( 'load.imagesLoaded error.imagesLoaded', imgLoadedHandler )
+		.each( function( i, el ) {
+			var src = el.src;
+
+			// find out if this image has been already checked for status
+			// if it was, and src has not changed, call imgLoaded on it
+			var cached = $.data( el, 'imagesLoaded' );
+			if ( cached && cached.src === src ) {
+				imgLoaded( el, cached.isBroken );
+				return;
+			}
+
+			// if complete is true and browser supports natural sizes, try
+			// to check for image status manually
+			if ( el.complete && el.naturalWidth !== undefined ) {
+				imgLoaded( el, el.naturalWidth === 0 || el.naturalHeight === 0 );
+				return;
+			}
+
+			// cached images don't fire load sometimes, so we reset src, but only when
+			// dealing with IE, or image is complete (loaded) and failed manual check
+			// webkit hack from http://groups.google.com/group/jquery-dev/browse_thread/thread/eee6ab7b2da50e1f
+			if ( el.readyState || el.complete ) {
+				el.src = BLANK;
+				el.src = src;
+			}
+		});
+	}
+
+	return deferred ? deferred.promise( $this ) : $this;
+};
+
 }(jQuery));
 
 
@@ -57,12 +131,15 @@
  *
  * Version History
  * --------------------------------------------------------------------------------
+ * 2.1.2 - 02-18-2013
+ *		Trying to fix pixel shift problem.
+ * 		Updated imagesLoaded fn.
  * 2.1.1 - 12-20-2011
- *		Minor changes to to make sure you can use ustom options (from version 1.1.2).
+ *		Minor changes to to make sure you can use custom options (from version 1.1.2).
  *		Added more directions (topleft, topright, bottomleft, bottomright)
  * 2.1 - 12-20-2011
  *		Added the ability to use links on your images.
- *			 (This version now uses and required jQuery 1.7+)
+ *			 (This version now uses and requires jQuery 1.7+)
  *		Fixed the padding, margin, border offset problem.
  * 2.0 - 12-19-2011
  *		Re-write to new plug-in structure.
@@ -86,15 +163,15 @@
 
 		var options = {
 				// user editable options
-				preset: null,
-				xBlocks: 12,
-				yBlocks: 3,
-				minBlockSize: 3,
-				delay: 3000,
-				direction: 'left',
-				style: 'normal',
-				translucent: false,
-				sloppy: false
+				'preset'		: null,
+				'xBlocks'		: 12,
+				'yBlocks'		: 3,
+				'minBlockSize'	: 3,
+				'delay'			: 3000,
+				'direction'		: 'left',
+				'style'			: 'normal',
+				'translucent'	: false,
+				'sloppy'		: false
 			},
 
 			_randomRange = function (a, b, f) {
@@ -136,47 +213,47 @@
 					// calculate positions
 					if (options.current_direction === 'top') {
 
-						data.start_top = options.minBlockSize * -1;
+						data.start_top 	= options.minBlockSize * -1;
 						data.start_left = parseInt((sys.block_w * data.x) + (sys.block_w / 2) - (options.minBlockSize / 2), 10);
 
 					} else if (options.current_direction === 'topleft') {
 
-						data.start_top = options.minBlockSize * -1;
+						data.start_top 	= options.minBlockSize * -1;
 						data.start_left = options.minBlockSize * -1;
 
 					} else if (options.current_direction === 'topright') {
 
-						data.start_top = options.minBlockSize * -1;
+						data.start_top 	= options.minBlockSize * -1;
 						data.start_left = sys.w + options.minBlockSize;
 
 					} else if (options.current_direction === 'left') {
 
-						data.start_top = parseInt((sys.block_h * data.y) + (sys.block_h / 2) - (options.minBlockSize / 2), 10);
+						data.start_top 	= parseInt((sys.block_h * data.y) + (sys.block_h / 2) - (options.minBlockSize / 2), 10);
 						data.start_left = options.minBlockSize * -1;
 
 					} else if (options.current_direction === 'bottom') {
 
-						data.start_top = sys.h + options.minBlockSize;
+						data.start_top 	= sys.h + options.minBlockSize;
 						data.start_left = parseInt((sys.block_w * data.x) + (sys.block_w / 2) - (options.minBlockSize / 2), 10);
 
 					} else if (options.current_direction === 'bottomleft') {
 
-						data.start_top = sys.h + options.minBlockSize;
+						data.start_top 	= sys.h + options.minBlockSize;
 						data.start_left = options.minBlockSize * -1;
 
 					} else if (options.current_direction === 'bottomright') {
 
-						data.start_top = sys.h + options.minBlockSize;
+						data.start_top 	= sys.h + options.minBlockSize;
 						data.start_left = sys.w + options.minBlockSize;
 
 					} else if (options.current_direction === 'right') {
 
-						data.start_top = parseInt((sys.block_h * data.y) + (sys.block_h / 2) - (options.minBlockSize / 2), 10);
+						data.start_top 	= parseInt((sys.block_h * data.y) + (sys.block_h / 2) - (options.minBlockSize / 2), 10);
 						data.start_left = sys.w + options.minBlockSize;
 
 					} else {
 
-						data.start_top = parseInt((sys.block_h * data.y) + (sys.block_h / 2) - (options.minBlockSize / 2), 10);
+						data.start_top 	= parseInt((sys.block_h * data.y) + (sys.block_h / 2) - (options.minBlockSize / 2), 10);
 						data.start_left = parseInt((sys.block_w * data.x) + (sys.block_w / 2) - (options.minBlockSize / 2), 10);
 
 					}
@@ -191,12 +268,12 @@
 				}
 
 				$this.css({
-					top: data.start_top + 'px',
-					left: data.start_left + 'px',
-					width: options.minBlockSize + 'px',
-					height: options.minBlockSize + 'px',
-					'background-image': 'url(' + slide_src + ')',
-					opacity: data.opacity
+					'top'				: data.start_top + 'px',
+					'left'				: data.start_left + 'px',
+					'width'				: options.minBlockSize + 'px',
+					'height'			: options.minBlockSize + 'px',
+					'background-image'	: 'url(' + slide_src + ')',
+					'opacity'			: data.opacity
 				});
 
 				$this.data('info', data);
@@ -277,9 +354,10 @@
 			$obj.find('#cjFlashyTransitionTop .cjFlashyTransitionBlock').each(function () {
 				var off = $obj.offset(),
 					padMargBorFixW = parseInt(($obj.outerWidth() - $obj.width()) / 2, 10),
-					padMargBorFixH = parseInt(($obj.outerHeight() - $obj.height()) / 2, 10);
+					padMargBorFixH = parseInt(($obj.outerHeight() - $obj.height()) / 2, 10),
+					bp = parseInt(off.left + padMargBorFixW - $(window).scrollLeft(), 10) + 'px ' + parseInt(off.top + padMargBorFixH - $(window).scrollTop(), 10) + 'px';
 				$(this).css({
-					'background-position': (off.left + padMargBorFixW - $(window).scrollLeft()) + 'px ' + (off.top + padMargBorFixH - $(window).scrollTop()) + 'px'
+					'background-position': bp
 				});
 			});
 		}
@@ -368,29 +446,29 @@
 					}
 
 					$block.css({
-						position: 'absolute',
-						top: data.start_top + 'px',
-						left: data.start_left + 'px',
-						display: 'block',
-						width: options.minBlockSize + 'px',
-						height: options.minBlockSize + 'px',
-						margin: '0px',
-						padding: '0px',
-						'background-image': 'url(' + slide_src + ')',
-						'background-repeat': 'no-repeat',
-						'background-position': $obj.offset().left + 'px ' + $obj.offset().top + 'px',
-						'background-attachment': 'fixed',
-						opacity: data.opacity
+						'position'						: 'absolute',
+						'top'							: data.start_top + 'px',
+						'left'							: data.start_left + 'px',
+						'display'						: 'block',
+						'width'							: options.minBlockSize + 'px',
+						'height'						: options.minBlockSize + 'px',
+						'margin'						: '0px',
+						'padding'						: '0px',
+						'background-image'				: 'url(' + slide_src + ')',
+						'background-repeat'				: 'no-repeat',
+						'background-position'			: $obj.offset().left + 'px ' + $obj.offset().top + 'px',
+						'background-attachment'			: 'fixed',
+						'opacity'						: data.opacity
 					});
 
 					/* set up additional stylings based on style */
 					if (options.style === 'rounded') {
 						$block.css({
-							'-moz-border-radius': (sys.h > sys.w ? sys.h : sys.w) + 'px',
-							'-webkit-border-radius': (sys.h > sys.w ? sys.h : sys.w) + 'px',
-							'-o-border-radius': (sys.h > sys.w ? sys.h : sys.w) + 'px',
-							'-ms-border-radius': (sys.h > sys.w ? sys.h : sys.w) + 'px',
-							'border-radius': (sys.h > sys.w ? sys.h : sys.w) + 'px'
+							'-moz-border-radius'		: (sys.h > sys.w ? sys.h : sys.w) + 'px',
+							'-webkit-border-radius'		: (sys.h > sys.w ? sys.h : sys.w) + 'px',
+							'-o-border-radius'			: (sys.h > sys.w ? sys.h : sys.w) + 'px',
+							'-ms-border-radius'			: (sys.h > sys.w ? sys.h : sys.w) + 'px',
+							'border-radius'				: (sys.h > sys.w ? sys.h : sys.w) + 'px'
 						});
 					}
 
@@ -430,83 +508,83 @@
 			if (options.preset) {
 				switch (options.preset) {
 				case 'cubism':
-					options.xBlocks = Math.round(sys.w / 100);
-					options.yBlocks = Math.round(sys.h / 100);
-					options.minBlockSize = Math.round(sys.w / 100) * 25;
-					options.direction = 'random';
-					options.translucent = true;
-					options.sloppy = true;
-					options.delay = 3000;
+					options.xBlocks 		= Math.round(sys.w / 100);
+					options.yBlocks 		= Math.round(sys.h / 100);
+					options.minBlockSize 	= Math.round(sys.w / 100) * 25;
+					options.direction 		= 'random';
+					options.translucent 	= true;
+					options.sloppy 			= true;
+					options.delay 			= 3000;
 					break;
 				case 'rain':
-					options.xBlocks = Math.round(sys.w / 75);
-					options.yBlocks = Math.round(sys.h / 75);
-					options.minBlockSize = 2;
-					options.style = 'rounded';
-					options.direction = 'top';
-					options.translucent = false;
-					options.sloppy = true;
-					options.delay = 1250;
+					options.xBlocks 		= Math.round(sys.w / 75);
+					options.yBlocks 		= Math.round(sys.h / 75);
+					options.minBlockSize 	= 2;
+					options.style 			= 'rounded';
+					options.direction 		= 'top';
+					options.translucent 	= false;
+					options.sloppy 			= true;
+					options.delay 			= 1250;
 					break;
 				case 'blinds':
-					options.xBlocks = 1;
-					options.yBlocks = Math.round(sys.h / 15);
-					options.minBlockSize = 0;
-					options.style = 'normal';
-					options.direction = 'top';
-					options.translucent = false;
-					options.sloppy = false;
-					options.delay = 3000;
+					options.xBlocks 		= 1;
+					options.yBlocks 		= Math.round(sys.h / 15);
+					options.minBlockSize 	= 0;
+					options.style 			= 'normal';
+					options.direction 		= 'top';
+					options.translucent 	= false;
+					options.sloppy 			= false;
+					options.delay 			= 3000;
 					break;
 				case 'blinds2':
-					options.xBlocks = Math.round(sys.w / 15);
-					options.yBlocks = 1;
-					options.minBlockSize = 0;
-					options.style = 'normal';
-					options.direction = 'top';
-					options.translucent = false;
-					options.sloppy = false;
-					options.delay = 3000;
+					options.xBlocks 		= Math.round(sys.w / 15);
+					options.yBlocks 		= 1;
+					options.minBlockSize 	= 0;
+					options.style 			= 'normal';
+					options.direction 		= 'top';
+					options.translucent 	= false;
+					options.sloppy 			= false;
+					options.delay 			= 3000;
 					break;
 				case 'transport':
-					options.xBlocks = 1;
-					options.yBlocks = Math.round(sys.h / 10);
-					options.minBlockSize = 0;
-					options.style = 'normal';
-					options.direction = 'top';
-					options.translucent = true;
-					options.sloppy = true;
-					options.delay = 1250;
+					options.xBlocks 		= 1;
+					options.yBlocks 		= Math.round(sys.h / 10);
+					options.minBlockSize 	= 0;
+					options.style 			= 'normal';
+					options.direction 		= 'top';
+					options.translucent 	= true;
+					options.sloppy 			= true;
+					options.delay 			= 1250;
 					break;
 				case 'transport2':
-					options.xBlocks = Math.round(sys.w / 10);
-					options.yBlocks = 1;
-					options.minBlockSize = 0;
-					options.style = 'normal';
-					options.direction = 'top';
-					options.translucent = true;
-					options.sloppy = true;
-					options.delay = 1250;
+					options.xBlocks 		= Math.round(sys.w / 10);
+					options.yBlocks 		= 1;
+					options.minBlockSize 	= 0;
+					options.style 			= 'normal';
+					options.direction 		= 'top';
+					options.translucent 	= true;
+					options.sloppy 			= true;
+					options.delay			= 1250;
 					break;
 				case 'bricks':
-					options.xBlocks = Math.round(sys.w / 100);
-					options.yBlocks = Math.round(sys.h / 100);
-					options.minBlockSize = 3;
-					options.style = 'normal';
-					options.direction = 'left';
-					options.translucent = false;
-					options.sloppy = false;
-					options.delay = 3000;
+					options.xBlocks 		= Math.round(sys.w / 100);
+					options.yBlocks 		= Math.round(sys.h / 100);
+					options.minBlockSize 	= 3;
+					options.style 			= 'normal';
+					options.direction 		= 'left';
+					options.translucent 	= false;
+					options.sloppy 			= false;
+					options.delay 			= 3000;
 					break;
 				default:
-					options.xBlocks = Math.round(sys.w / 100);
-					options.yBlocks = Math.round(sys.h / 100);
-					options.minBlockSize = 3;
-					options.style = 'normal';
-					options.direction = 'top';
-					options.translucent = false;
-					options.sloppy = false;
-					options.delay = 3000;
+					options.xBlocks 		= Math.round(sys.w / 100);
+					options.yBlocks 		= Math.round(sys.h / 100);
+					options.minBlockSize 	= 3;
+					options.style 			= 'normal';
+					options.direction 		= 'top';
+					options.translucent 	= false;
+					options.sloppy 			= false;
+					options.delay 			= 3000;
 					break;
 				}
 			}
@@ -561,34 +639,34 @@
 
 			$obj.append('<div id="cjFlashyTransitionBottom">');
 			$obj.find('#cjFlashyTransitionBottom').css({
-				position: 'absolute',
-				top: '0px',
-				left: '0px',
-				display: 'block',
-				width: sys.w + 'px',
-				height: sys.h + 'px',
-				margin: '0px',
-				padding: '0px',
-				'background-image': 'url("' + slide_src + '")',
-				'background-repeat': 'no-repeat',
-				'background-position': '50% 50%',
-				'background-attachment': 'scroll',
-				'z-index': 1,
-				overflow: 'hidden'
+				'position'				: 'absolute',
+				'top'					: '0px',
+				'left'					: '0px',
+				'display'				: 'block',
+				'width'					: sys.w + 'px',
+				'height'				: sys.h + 'px',
+				'margin'				: '0px',
+				'padding'				: '0px',
+				'background-image'		: 'url("' + slide_src + '")',
+				'background-repeat'		: 'no-repeat',
+				'background-position'	: '50% 50%',
+				'background-attachment'	: 'scroll',
+				'z-index'				: 1,
+				'overflow'				: 'hidden'
 			});
 
 			$obj.append('<div id="cjFlashyTransitionTop">');
 			$obj.find('#cjFlashyTransitionTop').css({
-				position: 'absolute',
-				top: sys.offset_y + 'px',
-				left: sys.offset_x + 'px',
-				display: 'block',
-				width: sys.block_w * options.xBlocks + 'px',
-				height: sys.block_h * options.yBlocks + 'px',
-				margin: '0px',
-				padding: '0px',
-				'z-index': 2,
-				overflow: 'hidden'
+				'position'				: 'absolute',
+				'top'					: sys.offset_y + 'px',
+				'left'					: sys.offset_x + 'px',
+				'display'				: 'block',
+				'width'					: sys.block_w * options.xBlocks + 'px',
+				'height'				: sys.block_h * options.yBlocks + 'px',
+				'margin'				: '0px',
+				'padding'				: '0px',
+				'z-index'				: 2,
+				'overflow'				: 'hidden'
 			});
 
 			createBlocks();
@@ -600,20 +678,20 @@
 			options = $.extend(options, settings);
 			$obj.data('system', {
 				// system parameters
-				version: '2.1.1',
-				imgs: [],
-				w: parseInt($obj.width(), 10),
-				h: parseInt($obj.height(), 10),
-				block_w: 0,
-				block_h: 0,
-				sec_y: 0,
-				sec_x: 0,
-				current_img: 0,
-				current_blocks: 0,
-				current_direction: 'left',
-				directions: ['top', 'topleft', 'topright', 'left', 'bottom', 'bottomleft', 'bottomright', 'right'],
-				total_blocks: 0,
-				loaded: 0
+				'version'				: '2.1.1',
+				'imgs'					: [],
+				'w'						: parseInt($obj.width(), 10),
+				'h'						: parseInt($obj.height(), 10),
+				'block_w'				: 0,
+				'block_h'				: 0,
+				'sec_y'					: 0,
+				'sec_x'					: 0,
+				'current_img'			: 0,
+				'current_blocks'		: 0,
+				'current_direction'		: 'left',
+				'directions'			: ['top', 'topleft', 'topright', 'left', 'bottom', 'bottomleft', 'bottomright', 'right'],
+				'total_blocks'			: 0,
+				'loaded'				: 0
 			});
 
 			// grab images and check for links
