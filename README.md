@@ -4,6 +4,8 @@ Copyright (c) 2011 Creative Juices Bo. Co.
 Written by: Doug Jones ([www.cjboco.com](https://cjboco.com))  
 Licensed under the MIT.  
 
+View [online demo](http://cjboco.github.io/CJ-Flashy-Slideshow/).
+
 ## A jQuery Plugin That Gives Your Slide Shows Some Flash-Like Transitions
 
 
