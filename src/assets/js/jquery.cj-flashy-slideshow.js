@@ -214,7 +214,7 @@ $.fn.imagesLoaded = function( callback ) {
 					if (options.current_direction === 'top') {
 
 						data.start_top 	= options.minBlockSize * -1;
-						data.start_left = parseInt((sys.block_w * data.x) + (sys.block_w / 2) - (options.minBlockSize / 2), 10);
+						data.start_left = parseFloat(sys.block_w * data.x) + (sys.block_w / 2) - (options.minBlockSize / 2);
 
 					} else if (options.current_direction === 'topleft') {
 
@@ -228,13 +228,13 @@ $.fn.imagesLoaded = function( callback ) {
 
 					} else if (options.current_direction === 'left') {
 
-						data.start_top 	= parseInt((sys.block_h * data.y) + (sys.block_h / 2) - (options.minBlockSize / 2), 10);
+						data.start_top 	= parseFloat(sys.block_h * data.y) + (sys.block_h / 2) - (options.minBlockSize / 2);
 						data.start_left = options.minBlockSize * -1;
 
 					} else if (options.current_direction === 'bottom') {
 
 						data.start_top 	= sys.h + options.minBlockSize;
-						data.start_left = parseInt((sys.block_w * data.x) + (sys.block_w / 2) - (options.minBlockSize / 2), 10);
+						data.start_left = parseFloat(sys.block_w * data.x) + (sys.block_w / 2) - (options.minBlockSize / 2);
 
 					} else if (options.current_direction === 'bottomleft') {
 
@@ -248,13 +248,13 @@ $.fn.imagesLoaded = function( callback ) {
 
 					} else if (options.current_direction === 'right') {
 
-						data.start_top 	= parseInt((sys.block_h * data.y) + (sys.block_h / 2) - (options.minBlockSize / 2), 10);
+						data.start_top 	= parseFloat(sys.block_h * data.y) + (sys.block_h / 2) - (options.minBlockSize / 2);
 						data.start_left = sys.w + options.minBlockSize;
 
 					} else {
 
-						data.start_top 	= parseInt((sys.block_h * data.y) + (sys.block_h / 2) - (options.minBlockSize / 2), 10);
-						data.start_left = parseInt((sys.block_w * data.x) + (sys.block_w / 2) - (options.minBlockSize / 2), 10);
+						data.start_top 	= parseFloat(sys.block_h * data.y) + (sys.block_h / 2) - (options.minBlockSize / 2);
+						data.start_left = parseFloat(sys.block_w * data.x) + (sys.block_w / 2) - (options.minBlockSize / 2);
 
 					}
 
@@ -331,8 +331,8 @@ $.fn.imagesLoaded = function( callback ) {
 				var $block = $(this),
 					data = $block.data('info');
 				$block.animate({
-					top: parseInt(((sys.block_h * data.y) + (sys.block_h / 2) - (options.minBlockSize / 2)) + (options.sloppy ? _randomRange(0, options.minBlockSize) - (options.minBlockSize / 2) : 0), 10) + 'px',
-					left: parseInt(((sys.block_w * data.x) + (sys.block_w / 2) - (options.minBlockSize / 2)) + (options.sloppy ? _randomRange(0, options.minBlockSize) - (options.minBlockSize / 2) : 0), 10) + 'px'
+					top: parseFloat((sys.block_h * data.y) + (sys.block_h / 2) - (options.minBlockSize / 2)) + (options.sloppy ? _randomRange(0, options.minBlockSize) - (options.minBlockSize / 2) : 0) + 'px',
+					left: parseFloat((sys.block_w * data.x) + (sys.block_w / 2) - (options.minBlockSize / 2)) + (options.sloppy ? _randomRange(0, options.minBlockSize) - (options.minBlockSize / 2) : 0) + 'px'
 				}, (options.sloppy ? _randomRange(350, 1250) : 650), 'linear', function () {
 					$block.animate({
 						top: data.end_top + 'px',
@@ -353,9 +353,9 @@ $.fn.imagesLoaded = function( callback ) {
 		function correctOffset() {
 			$obj.find('#cjFlashyTransitionTop .cjFlashyTransitionBlock').each(function () {
 				var off = $obj.offset(),
-					padMargBorFixW = parseInt(($obj.outerWidth() - $obj.width()) / 2, 10),
-					padMargBorFixH = parseInt(($obj.outerHeight() - $obj.height()) / 2, 10),
-					bp = parseInt(off.left + padMargBorFixW - $(window).scrollLeft(), 10) + 'px ' + parseInt(off.top + padMargBorFixH - $(window).scrollTop(), 10) + 'px';
+					padMargBorFixW = parseFloat(($obj.outerWidth() - $obj.width()) / 2),
+					padMargBorFixH = parseFloat(($obj.outerHeight() - $obj.height()) / 2),
+					bp = parseFloat(off.left + padMargBorFixW - $(window).scrollLeft()) + 'px ' + parseFloat(off.top + padMargBorFixH - $(window).scrollTop()) + 'px';
 				$(this).css({
 					'background-position': bp
 				});
@@ -378,8 +378,8 @@ $.fn.imagesLoaded = function( callback ) {
 					data = {
 						x: x,
 						y: y,
-						end_top: parseInt(((sys.block_h * y) - (sys.block_h / 2)), 10),
-						end_left: parseInt(((sys.block_w * x) - (sys.block_w / 2)), 10)
+						end_top: parseFloat(((sys.block_h * y) - (sys.block_h / 2))),
+						end_left: parseFloat(((sys.block_w * x) - (sys.block_w / 2)))
 					};
 
 					// determine direction
@@ -391,7 +391,7 @@ $.fn.imagesLoaded = function( callback ) {
 					if (options.current_direction === 'top') {
 
 						data.start_top = options.minBlockSize * -1;
-						data.start_left = parseInt((sys.block_w * x) + (sys.block_w / 2) - (options.minBlockSize / 2), 10);
+						data.start_left = parseFloat((sys.block_w * x) + (sys.block_w / 2) - (options.minBlockSize / 2));
 
 					} else if (options.current_direction === 'topleft') {
 
@@ -405,13 +405,13 @@ $.fn.imagesLoaded = function( callback ) {
 
 					} else if (options.current_direction === 'left') {
 
-						data.start_top = parseInt((sys.block_h * y) + (sys.block_h / 2) - (options.minBlockSize / 2), 10);
+						data.start_top = parseFloat((sys.block_h * y) + (sys.block_h / 2) - (options.minBlockSize / 2));
 						data.start_left = options.minBlockSize * -1;
 
 					} else if (options.current_direction === 'bottom') {
 
 						data.start_top = sys.h + options.minBlockSize;
-						data.start_left = parseInt((sys.block_w * x) + (sys.block_w / 2) - (options.minBlockSize / 2), 10);
+						data.start_left = parseFloat((sys.block_w * x) + (sys.block_w / 2) - (options.minBlockSize / 2));
 
 					} else if (options.current_direction === 'bottomleft') {
 
@@ -425,13 +425,13 @@ $.fn.imagesLoaded = function( callback ) {
 
 					} else if (options.current_direction === 'right') {
 
-						data.start_top = parseInt((sys.block_h * y) + (sys.block_h / 2) - (options.minBlockSize / 2), 10);
+						data.start_top = parseFloat((sys.block_h * y) + (sys.block_h / 2) - (options.minBlockSize / 2));
 						data.start_left = sys.w + options.minBlockSize;
 
 					} else {
 
-						data.start_top = parseInt((sys.block_h * y) + (sys.block_h / 2) - (options.minBlockSize / 2), 10);
-						data.start_left = parseInt((sys.block_w * x) + (sys.block_w / 2) - (options.minBlockSize / 2), 10);
+						data.start_top = parseFloat((sys.block_h * y) + (sys.block_h / 2) - (options.minBlockSize / 2));
+						data.start_left = parseFloat((sys.block_w * x) + (sys.block_w / 2) - (options.minBlockSize / 2));
 
 					}
 
@@ -618,10 +618,10 @@ $.fn.imagesLoaded = function( callback ) {
 			}
 
 			// setup some initial variables
-			sys.block_w = parseInt(Math.ceil(sys.w / options.xBlocks), 10);
-			sys.block_h = parseInt(Math.ceil(sys.h / options.yBlocks), 10);
-			sys.offset_x = parseInt((sys.w - (sys.block_w * options.xBlocks)) / 2, 10);
-			sys.offset_y = parseInt((sys.h - (sys.block_h * options.yBlocks)) / 2, 10);
+			sys.block_w = parseFloat(Math.ceil(sys.w / options.xBlocks));
+			sys.block_h = parseFloat(Math.ceil(sys.h / options.yBlocks));
+			sys.offset_x = parseFloat((sys.w - (sys.block_w * options.xBlocks)) / 2);
+			sys.offset_y = parseFloat((sys.h - (sys.block_h * options.yBlocks)) / 2);
 			sys.total_blocks = options.xBlocks * options.yBlocks;
 			sys.current_img = 0;
 			sys.current_blocks = 0;
@@ -680,8 +680,8 @@ $.fn.imagesLoaded = function( callback ) {
 				// system parameters
 				'version'				: '2.1.1',
 				'imgs'					: [],
-				'w'						: parseInt($obj.width(), 10),
-				'h'						: parseInt($obj.height(), 10),
+				'w'						: parseFloat($obj.width()),
+				'h'						: parseFloat($obj.height()),
 				'block_w'				: 0,
 				'block_h'				: 0,
 				'sec_y'					: 0,

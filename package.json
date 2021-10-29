@@ -1,0 +1,23 @@
+{
+  "name": "cj-flashy-slideshow",
+  "version": "3.0.0",
+  "description": "A JavaScript library to give your slideshows some Flash-like transitoflashy transitions.",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cjboco/CJ-Flashy-Slideshow.git"
+  },
+  "keywords": [
+    "javascript",
+    "slideshow"
+  ],
+  "author": "Doug Jones",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/cjboco/CJ-Flashy-Slideshow/issues"
+  },
+  "homepage": "https://github.com/cjboco/CJ-Flashy-Slideshow#readme"
+}
